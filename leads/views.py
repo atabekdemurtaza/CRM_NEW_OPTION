@@ -7,6 +7,9 @@ from django.views.generic import TemplateView
 from django.views import generic
 from leads.forms import CustomUserCreationForm
 from django.urls import reverse_lazy, reverse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
+
 #from django.contrib.auth.views import PasswordChangeDoneView
 #CRUD -> Create, Retrieve, Update, Delete
 
@@ -19,23 +22,72 @@ class SignUpView(generic.CreateView):
     def get_success_url(self):
         return reverse('login')
 
-def lead_list(request):
+#New Version
+class LeadListView(LoginRequiredMixin, generic.ListView):
+
+    template_name = 'leads/lead-list.html'
+    queryset = Leads.objects.all()
+    context_object_name = 'leads'
+
+    def get_context_data(self, **kwargs):
+
+        user = self.request.user #atabekdemurtaza
+        context = super(LeadListView, self).get_context_data(**kwargs)
+        return context
+
+#Old version
+"""def lead_list(request):
 
     leads = Leads.objects.all()
     context = {
         'leads': leads
     }
     return render(request, 'leads/lead-list.html', context)
+"""
+#New version
+class LeadDetailView(LoginRequiredMixin, generic.DetailView):
+    
+    template_name = 'leads/lead-detail.html'
+    context_object_name = 'lead'
+    queryset = Leads.objects.all()
 
-def lead_detail(request, pk):
+#Old version
+"""def lead_detail(request, pk):
 
     lead = Leads.objects.get(id=pk)
     context = {
         'lead': lead        
     }
     return render(request, 'leads/lead-detail.html', context)
+"""
 
-def lead_create(request):
+#New version
+class LeadCreateView(LoginRequiredMixin, generic.CreateView):
+
+    template_name = 'leads/lead-create.html'
+    form_class = LeadModelCreateForm
+    #success_url = reverse_lazy('leads:lead_list')
+
+    def get_success_url(self):
+        return reverse('leads:lead_list')
+
+    def form_valid(self, form):
+
+        lead = form.save(commit=False)
+        lead.save()
+        #TO DO send mail
+        send_mail(
+            subject='A lead has been created already.',
+            message='Go to the web site',
+            from_email='atabekdemurtaza@gmail.com',
+            recipient_list=['testuser@gmail.com']
+        )
+        return super(LeadCreateView, self).form_valid(form)
+
+
+
+#Old version
+"""def lead_create(request):
 
     #New version
     form = LeadModelCreateForm
@@ -48,7 +100,7 @@ def lead_create(request):
         'form': form
     }
     return render(request, 'leads/lead-create.html', context)
-
+"""
 def lead_delete(request, pk):
 
     lead = Leads.objects.get(id=pk)

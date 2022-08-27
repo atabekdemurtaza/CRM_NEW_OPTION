@@ -139,3 +139,6 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 
 LOGIN_REDIRECT_URL = 'landing-page'
 LOGOUT_REDIRECT_URL = 'landing-page'
+
+#from django.core.mail.backends.console import EmailBackend
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
